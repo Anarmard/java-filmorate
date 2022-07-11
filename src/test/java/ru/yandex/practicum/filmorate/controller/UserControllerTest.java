@@ -46,7 +46,7 @@ class UserControllerTest {
 
     @Test
     void loginWithSpace() {
-        user.setEmail("logi n1");
+        user.setLogin("logi n1");
         Exception exception = assertThrows(ValidationException.class, ()-> userController.validateUser(user));
         assertEquals("Логин не может быть пустым и/или содержать пробелы!", exception.getMessage());
     }
