@@ -24,37 +24,72 @@ class UserControllerTest {
     }
 
     @Test
-    void emailIsNull() {
+    void emailIsNullCreate() {
         user.setEmail(null);
-        Exception exception = assertThrows(ValidationException.class, ()-> userController.validateUser(user));
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.createUser(user));
         assertEquals("Электронная почта не может быть пустой и должна содержать символ @!", exception.getMessage());
     }
 
     @Test
-    void emailWithOutAt() {
+    void emailIsNullUpdate() {
+        user.setEmail(null);
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.updateUser(user));
+        assertEquals("Электронная почта не может быть пустой и должна содержать символ @!", exception.getMessage());
+    }
+
+    @Test
+    void emailWithOutAtCreate() {
         user.setEmail("mar_anar_az.mail.ru");
-        Exception exception = assertThrows(ValidationException.class, ()-> userController.validateUser(user));
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.createUser(user));
         assertEquals("Электронная почта не может быть пустой и должна содержать символ @!", exception.getMessage());
     }
 
     @Test
-    void loginIsNull() {
+    void emailWithOutAtUpdate() {
+        user.setEmail("mar_anar_az.mail.ru");
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.updateUser(user));
+        assertEquals("Электронная почта не может быть пустой и должна содержать символ @!", exception.getMessage());
+    }
+
+    @Test
+    void loginIsNullCreate() {
         user.setLogin(null);
-        Exception exception = assertThrows(ValidationException.class, ()-> userController.validateUser(user));
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.createUser(user));
         assertEquals("Логин не может быть пустым и/или содержать пробелы!", exception.getMessage());
     }
 
     @Test
-    void loginWithSpace() {
+    void loginIsNullUpdate() {
+        user.setLogin(null);
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.updateUser(user));
+        assertEquals("Логин не может быть пустым и/или содержать пробелы!", exception.getMessage());
+    }
+
+    @Test
+    void loginWithSpaceCreate() {
         user.setLogin("logi n1");
-        Exception exception = assertThrows(ValidationException.class, ()-> userController.validateUser(user));
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.createUser(user));
         assertEquals("Логин не может быть пустым и/или содержать пробелы!", exception.getMessage());
     }
 
     @Test
-    void birthdayInFuturePlusOneDay() {
+    void loginWithSpaceUpdate() {
+        user.setLogin("logi n1");
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.updateUser(user));
+        assertEquals("Логин не может быть пустым и/или содержать пробелы!", exception.getMessage());
+    }
+
+    @Test
+    void birthdayInFuturePlusOneDayCreate() {
         user.setBirthday(LocalDate.now().plusDays(1));
-        Exception exception = assertThrows(ValidationException.class, ()-> userController.validateUser(user));
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.createUser(user));
+        assertEquals("Дата рождения не может быть в будущем!", exception.getMessage());
+    }
+
+    @Test
+    void birthdayInFuturePlusOneDayUpdate() {
+        user.setBirthday(LocalDate.now().plusDays(1));
+        Exception exception = assertThrows(ValidationException.class, ()-> userController.updateUser(user));
         assertEquals("Дата рождения не может быть в будущем!", exception.getMessage());
     }
 }

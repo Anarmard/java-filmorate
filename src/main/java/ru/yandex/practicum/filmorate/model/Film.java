@@ -10,9 +10,9 @@ public class Film {
     private String name; // название
     private String description; // описание
     private LocalDate releaseDate; // дата релиза
-    private Integer duration; // продолжительность фильма
+    private int duration; // продолжительность фильма
 
-    public Film(Long id, String name, String description, LocalDate releaseDate, Integer duration) {
+    public Film(Long id, String name, String description, LocalDate releaseDate, int duration) {
         this.id = id;
         this.name = name;
         this.description = description;
