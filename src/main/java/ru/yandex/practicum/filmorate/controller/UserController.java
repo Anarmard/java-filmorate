@@ -31,11 +31,7 @@ public class UserController {
 
     @PostMapping // создание пользователя
     public User createUser(@RequestBody User user) {
-        UserController userController = new UserController();
-        userController.validateUser(user); // проверяем данные пользователя
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+        validateUser(user); // проверяем данные пользователя
         user.setId(getNextId()); // присваиваем новый ID
         users.put(user.getId(), user);
         log.debug("Добавлен пользователь {}", user);
@@ -44,8 +40,7 @@ public class UserController {
 
     @PutMapping // обновление пользователя
     public User updateUser(@RequestBody User user) {
-        UserController userController = new UserController();
-        userController.validateUser(user); // проверяем данные пользователя
+        validateUser(user); // проверяем данные пользователя
         if (!users.containsKey(user.getId())) {
             throw new ValidationException("Указан неверный ID пользователя");
         }
@@ -63,6 +58,9 @@ public class UserController {
         }
         if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем!");
+        }
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
     }
 }

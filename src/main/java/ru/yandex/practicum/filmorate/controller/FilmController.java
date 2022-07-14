@@ -32,8 +32,7 @@ public class FilmController {
 
     @PostMapping // добавление фильма
     public Film createFilm(@RequestBody Film film) {
-        FilmController filmController = new FilmController();
-        filmController.validateFilm(film); // проверяем параметры фильма
+        validateFilm(film); // проверяем параметры фильма
         film.setId(getNextId()); // присваиваем новый ID
         films.put(film.getId(), film);
         log.debug("Добавлен фильм {}", film);
@@ -42,8 +41,7 @@ public class FilmController {
 
     @PutMapping // обновление фильма
     public Film updateFilm(@RequestBody Film film) {
-        FilmController filmController = new FilmController();
-        filmController.validateFilm(film); // проверяем параметры фильма
+        validateFilm(film); // проверяем параметры фильма
         if (!films.containsKey(film.getId())) {
             throw new ValidationException("Указан неверный ID фильма");
         }
