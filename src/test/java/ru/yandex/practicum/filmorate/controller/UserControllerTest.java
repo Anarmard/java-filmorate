@@ -4,15 +4,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
-    static UserController userController = new UserController();
-    User user = new User(1L, "mar_anar_az@mail.ru", "login1", "loginName",
+    static UserController userController = new UserController(new UserService(null));
+    User user = new User(1L,"mar_anar_az@mail.ru", "login1", "loginName",
             LocalDate.of(1988, 8,1));
+
 
     @BeforeEach
     void userCreate() {
