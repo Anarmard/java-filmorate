@@ -18,8 +18,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> filmMap = new HashMap<>();
     private Long lastUsedId = 1L;
 
-    @Override
-    public Long getNextId() {
+    private Long getNextId() {
         return lastUsedId++;
     }
 
@@ -33,7 +32,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     // получение фильма по ID
     @Override
     public Film getFilmByID(Long filmId) {
-        return filmMap.get(filmId);
+        Film film = filmMap.get(filmId);
+        if (film == null) {
+            throw new NotFoundException("User with id=" + filmId + " not found");
+        }
+        return film;
     }
 
     // создание фильма
@@ -85,5 +88,4 @@ public class InMemoryFilmStorage implements FilmStorage {
     private int compare(Film p0, Film p1) {
         return p1.getLikeUserID().size() - p0.getLikeUserID().size(); // именно в таком порядке
     }
-
 }

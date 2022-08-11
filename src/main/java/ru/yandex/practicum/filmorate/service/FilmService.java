@@ -32,7 +32,6 @@ public class FilmService {
 
     // получение фильма по ID
     public Film getFilmByID(Long id) {
-        checkFilmID(id);
         return filmStorage.getFilmByID(id);
     }
 
@@ -48,10 +47,7 @@ public class FilmService {
 
     // пользователь ставит лайк фильму
     public void addLike(Long filmId, Long userId) {
-        checkFilmID(filmId);
-        checkUserID(userId);
-
-        // передаем не ID, а сам фильм и пользователя. Совет наставника, на будущее при работе с БД
+         // передаем не ID, а сам фильм и пользователя. Совет наставника, на будущее при работе с БД
         Film film = filmStorage.getFilmByID(filmId);
         User user = userStorage.getUserByID(userId);
         filmStorage.addLike(film, user);
@@ -59,9 +55,6 @@ public class FilmService {
 
     // пользователь удаляет лайк
     public void deleteLike(Long filmId, Long userId) {
-        checkFilmID(filmId);
-        checkUserID(userId);
-
         // передаем не ID, а сам фильм и пользователя. Совет наставника, на будущее при работе с БД
         Film film = filmStorage.getFilmByID(filmId);
         User user = userStorage.getUserByID(userId);
@@ -72,19 +65,4 @@ public class FilmService {
     public List<Film> getPopularFilms(Integer count) {
         return filmStorage.getPopularFilms(count);
     }
-
-    void checkFilmID (Long filmId) {
-        Film film = filmStorage.getFilmByID(filmId);
-        if (film == null) {
-            throw new NotFoundException("User with id=" + filmId + " not found");
-        }
-    }
-
-    public void checkUserID (Long userId) {
-        User user = userStorage.getUserByID(userId);
-        if (user == null) {
-            throw new NotFoundException("User with id=" + userId + " not found");
-        }
-    }
-
 }

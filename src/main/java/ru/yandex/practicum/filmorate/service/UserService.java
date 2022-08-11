@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 // Отвечать за такие операции с пользователями, как добавление в друзья, удаление из друзей, вывод списка общих друзей.
 // Пока пользователям не надо одобрять заявки в друзья — добавляем сразу.
@@ -29,7 +30,6 @@ public class UserService {
 
     // получение пользователя по ID
     public User getUserByID(Long id) {
-        checkUserID(id);
         return userStorage.getUserByID(id);
     }
 
@@ -45,9 +45,6 @@ public class UserService {
 
     // добавление в друзья
     public void addFriend(Long userId, Long friendId) {
-        checkUserID(userId);
-        checkUserID(friendId);
-
         // передаем не ID, а самого пользователя. Совет наставника, на будущее при работе с БД
         User user = userStorage.getUserByID(userId);
         User friend = userStorage.getUserByID(friendId);
@@ -56,9 +53,6 @@ public class UserService {
 
     // удаление из друзей
     public void deleteFriend(Long userId, Long friendId) {
-        checkUserID(userId);
-        checkUserID(friendId);
-
         // передаем не ID, а самого пользователя. Совет наставника, на будущее при работе с БД
         User user = userStorage.getUserByID(userId);
         User friend = userStorage.getUserByID(friendId);
@@ -67,27 +61,16 @@ public class UserService {
 
     // возвращаем список пользователей, являющихся его друзьями
     public List<User> getListOfFriends(Long userId) {
-        checkUserID(userId);
         // передаем не ID, а самого пользователя. Совет наставника, на будущее при работе с БД
         User user = userStorage.getUserByID(userId);
         return userStorage.getListOfFriends(user);
     }
 
     // список друзей, общих с другим пользователем
-    public List<User> getListOfCommonFriends(Long userId, Long otherId) {
-        checkUserID(userId);
-        checkUserID(otherId);
+    public Set<User> getListOfCommonFriends(Long userId, Long otherId) {
         // передаем не ID, а самого пользователя. Совет наставника, на будущее при работе с БД
         User user = userStorage.getUserByID(userId);
         User friend = userStorage.getUserByID(otherId);
         return userStorage.getListOfCommonFriends(user, friend);
     }
-
-    public void checkUserID (Long userId) {
-        User user = userStorage.getUserByID(userId);
-        if (user == null) {
-            throw new NotFoundException("User with id=" + userId + " not found");
-        }
-    }
-
 }

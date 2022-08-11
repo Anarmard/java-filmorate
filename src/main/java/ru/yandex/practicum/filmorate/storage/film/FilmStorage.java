@@ -8,15 +8,14 @@ import java.util.List;
 
 public interface FilmStorage {
     // будут определены методы добавления, удаления и модификации объектов
-    public Long getNextId();
 
-    public Collection<Film> findAllFilms();
+    Collection<Film> findAllFilms();
 
-    public Film getFilmByID(Long id);
+    Film getFilmByID(Long id);
 
-    public Film createFilm(Film film);
+    Film createFilm(Film film);
 
-    public Film updateFilm(Film film);
+    Film updateFilm(Film film);
 
     void addLike(Film film, User user);
 

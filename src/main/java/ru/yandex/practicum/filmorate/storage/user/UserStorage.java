@@ -4,18 +4,18 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public interface UserStorage {
     // будут определены методы добавления, удаления и модификации объектов
-    public Long getNextId();
 
-    public Collection<User> findAllUsers();
+    Collection<User> findAllUsers();
 
-    public User getUserByID(Long userId);
+    User getUserByID(Long userId);
 
-    public User createUser(User user);
+    User createUser(User user);
 
-    public User updateUser(User user);
+    User updateUser(User user);
 
     void addFriend(User user, User friend);
 
@@ -23,5 +23,5 @@ public interface UserStorage {
 
     List<User> getListOfFriends(User user);
 
-    List<User> getListOfCommonFriends(User user, User friend);
+    Set<User> getListOfCommonFriends(User user, User friend);
 }

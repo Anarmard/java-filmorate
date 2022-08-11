@@ -3,10 +3,10 @@ package ru.yandex.practicum.filmorate.storage.user;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -16,8 +16,7 @@ public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> userMap = new HashMap<>();
     private Long lastUsedId = 1L;
 
-    @Override
-    public Long getNextId() {
+    private Long getNextId() {
         return (lastUsedId++);
     }
 
@@ -31,7 +30,11 @@ public class InMemoryUserStorage implements UserStorage {
     // получение пользователя по ID
     @Override
     public User getUserByID(Long id) {
-        return userMap.get(id);
+        User user = userMap.get(id);
+        if (user == null) {
+            throw new NotFoundException("User with id=" + id + " not found");
+        }
+        return user;
     }
 
     // создание пользователя
@@ -86,15 +89,15 @@ public class InMemoryUserStorage implements UserStorage {
 
     // список друзей, общих с другим пользователем
     @Override
-    public List<User> getListOfCommonFriends(User user, User friend) {
-        List<User> listOfCommonFriends = new ArrayList<>();
-        for (Long id : user.getFriendsID()) {
-            for (Long otherId : friend.getFriendsID()) {
-                if (Objects.equals(id, otherId)) {
-                    listOfCommonFriends.add(getUserByID(id));
-                }
-            }
+    public Set<User> getListOfCommonFriends(User user, User friend) {
+        Set<Long> setIdOfCommonFriends = user.getFriendsID().stream()
+                .filter(friend.getFriendsID()::contains).collect(Collectors.toSet());
+
+        Set<User> setOfCommonFriends = new HashSet<>();
+
+        for (Long id : setIdOfCommonFriends) {
+            setOfCommonFriends.add(getUserByID(id));
         }
-        return listOfCommonFriends;
+        return setOfCommonFriends;
     }
 }
