@@ -90,14 +90,10 @@ public class InMemoryUserStorage implements UserStorage {
     // список друзей, общих с другим пользователем
     @Override
     public Set<User> getListOfCommonFriends(User user, User friend) {
-        Set<Long> setIdOfCommonFriends = user.getFriendsID().stream()
-                .filter(friend.getFriendsID()::contains).collect(Collectors.toSet());
 
-        Set<User> setOfCommonFriends = new HashSet<>();
-
-        for (Long id : setIdOfCommonFriends) {
-            setOfCommonFriends.add(getUserByID(id));
-        }
-        return setOfCommonFriends;
+        return user.getFriendsID().stream()
+                .filter(friend.getFriendsID()::contains)
+                .map(this::getUserByID)
+                .collect(Collectors.toSet());
     }
 }
