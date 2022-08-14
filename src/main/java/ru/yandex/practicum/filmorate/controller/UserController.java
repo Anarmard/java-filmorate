@@ -1,55 +1,70 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/users")
-@Slf4j
 public class UserController {
-    private final Map<Long, User> users = new HashMap<>();
-    private Long lastUsedId = 1L;
+    private final UserService userService;
 
-    private Long getNextId() {
-        return (lastUsedId++);
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
-    @GetMapping // получение списка всех пользователей.
+    @GetMapping // получение списка всех пользователей
     public Collection<User> findAllUsers() {
-        log.info("Количество пользователей: {}", users.size());
-        return users.values();
+        return userService.findAllUsers();
+    }
+
+    @GetMapping("/{id}") // получение пользователя по ID
+    public User getUserByID(@PathVariable Long id) {
+        if (id == null) {
+            throw new ValidationException("Передан пустой ID");
+        }
+        return userService.getUserByID(id);
     }
 
     @PostMapping // создание пользователя
     public User createUser(@RequestBody User user) {
         validateUser(user); // проверяем данные пользователя
-        user.setId(getNextId()); // присваиваем новый ID
-        users.put(user.getId(), user);
-        log.debug("Добавлен пользователь {}", user);
-        return users.get(user.getId());
+        return userService.createUser(user);
     }
 
-    @PutMapping // обновление пользователя
+    @PutMapping // обновление данных о пользователе
     public User updateUser(@RequestBody User user) {
         validateUser(user); // проверяем данные пользователя
-        if (!users.containsKey(user.getId())) {
-            throw new ValidationException("Указан неверный ID пользователя");
-        }
-        users.put(user.getId(), user);
-        log.debug("Обновлены данные пользователя {}", user);
-        return users.get(user.getId());
+        return userService.updateUser(user);
     }
 
-    void validateUser (User user) {
+    @PutMapping("/{userId}/friends/{friendId}") // добавление в друзья
+    public void addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        userService.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}") // удаление из друзей
+    public void deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        userService.deleteFriend(userId, friendId);
+    }
+
+    @GetMapping("/{userId}/friends") // возвращаем список пользователей, являющихся его друзьями
+    public List<User> getListOfFriends (@PathVariable Long userId) {
+        return userService.getListOfFriends(userId);
+    }
+
+    @GetMapping("/{userId}/friends/common/{otherId}") // список друзей, общих с другим пользователем
+    public Set<User> getListOfCommonFriends (@PathVariable Long userId, @PathVariable Long otherId) {
+        return userService.getListOfCommonFriends(userId, otherId);
+    }
+
+    public void validateUser (User user) {
         if (user.getEmail() == null || !user.getEmail().contains("@")) {
             throw new ValidationException("Электронная почта не может быть пустой и должна содержать символ @!");
         }
