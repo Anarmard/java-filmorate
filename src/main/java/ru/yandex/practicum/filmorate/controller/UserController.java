@@ -25,7 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}") // получение пользователя по ID
-    public User getUserByID(@PathVariable Long id) {
+    public Optional<User> getUserByID(@PathVariable Long id) {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @PutMapping // обновление данных о пользователе
-    public User updateUser(@RequestBody User user) {
+    public Optional<User> updateUser(@RequestBody User user) {
         validateUser(user); // проверяем данные пользователя
         return userService.updateUser(user);
     }
@@ -50,8 +50,8 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}") // удаление из друзей
-    public void deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-        userService.deleteFriend(userId, friendId);
+    public boolean deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        return userService.deleteFriend(userId, friendId);
     }
 
     @GetMapping("/{userId}/friends") // возвращаем список пользователей, являющихся его друзьями
@@ -60,7 +60,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/friends/common/{otherId}") // список друзей, общих с другим пользователем
-    public Set<User> getListOfCommonFriends (@PathVariable Long userId, @PathVariable Long otherId) {
+    public List<User> getListOfCommonFriends (@PathVariable Long userId, @PathVariable Long otherId) {
         return userService.getListOfCommonFriends(userId, otherId);
     }
 

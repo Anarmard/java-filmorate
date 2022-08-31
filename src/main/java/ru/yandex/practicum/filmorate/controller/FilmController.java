@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.Constants.FIRST_RELEASE_DATE;
 
@@ -27,7 +28,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}") // получение фильма по ID
-    public Film getFilmByID(@PathVariable Long id) {
+    public Optional<Film> getFilmByID(@PathVariable Long id) {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }

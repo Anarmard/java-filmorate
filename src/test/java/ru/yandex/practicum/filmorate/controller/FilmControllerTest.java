@@ -4,19 +4,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
-    static FilmController filmController = new FilmController(new FilmService(null, null));
+    static FilmController filmController = new FilmController(new FilmService(null));
 
     Film film = new Film(1L,"Green", "description1",
-            LocalDate.of(2005, 8,1), 120);
+            LocalDate.of(2005, 8,1), 120, 7, new Mpa(1, "G"), null);
 
     @BeforeEach
     void filmCreate() {
