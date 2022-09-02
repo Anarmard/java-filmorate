@@ -10,8 +10,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class User {
     private Long id; // целочисленный идентификатор
-    private String email; // электронная почта
-    private String login; // логин пользователя
     private String name;// имя для отображения
+    private String login; // логин пользователя
+    private String email; // электронная почта
     private LocalDate birthday;// дата рождения
 }

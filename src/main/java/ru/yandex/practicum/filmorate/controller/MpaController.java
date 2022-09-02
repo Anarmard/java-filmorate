@@ -28,7 +28,7 @@ public class MpaController {
     }
 
     @GetMapping("/{id}") // получение рейтинга по ID
-    public Optional<Mpa> getGenreByID(@PathVariable int id) {
+    public Optional<Mpa> getGenreByID(@PathVariable Long id) {
         if (id == 0) {
             throw new ValidationException("Передан пустой ID");
         }

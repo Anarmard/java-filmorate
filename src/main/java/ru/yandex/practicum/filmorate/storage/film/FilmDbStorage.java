@@ -2,19 +2,15 @@ package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -35,11 +31,10 @@ public class FilmDbStorage implements FilmStorage {
         // Получаем дату и конвертируем её из sql.Date в time.LocalDate
         LocalDate releaseDate = rs.getDate("RELEASE_DATE").toLocalDate();
         int duration = rs.getInt("DURATION");
-        int rate = rs.getInt("RATE");
-        Mpa mpa = new Mpa(rs.getInt("RATING_MPA"), rs.getString("DESCRIPTION"));
+        Mpa mpa = new Mpa(rs.getLong("RATING_MPA"), rs.getString("DESCRIPTION"));
         Set<Genre> genres = genreMap.getOrDefault(id, new HashSet<>()); // проверить можно ли так записать в Set!!!
 
-        return new Film(id, name, description, releaseDate, duration, rate, mpa, genres);
+        return new Film(id, name, description, releaseDate, duration, mpa, genres);
     }
 
     // cоздание Map фильм-все его жанры. Нужен для метода findAllFilms
@@ -65,7 +60,7 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> findAllFilms() {
         String sqlFilm = "select f.FILM_ID, f.FILM_NAME, f.DESCRIPTION, f.RELEASE_DATE, " +
                 "f.DURATION, f.RATE, f.RATING_MPA, mpa.DESCRIPTION " +
-                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA";
+                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA_ID";
 
         String sqlGenre = "select fg.FILM_ID, fg.GENRE_ID, g.GENRE_NAME " +
                 "from FILMS_GENRES as fg join GENRES as g on fg.GENRE_ID = g.GENRE_ID";
@@ -81,11 +76,11 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> getFilmByID(Long filmId) {
         // выполняем запрос к базе данных
         String sqlFilm = "select f.FILM_ID, f.FILM_NAME, f.DESCRIPTION, f.RELEASE_DATE, " +
-                "f.DURATION, f.RATE, f.RATING_MPA, mpa.DESCRIPTION " +
-                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA " +
+                "f.DURATION, mpa.RATING_MPA_ID, mpa.DESCRIPTION " +
+                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA_ID " +
                 "where f.FILM_ID = ?";
 
-        String sqlGenre = "select fg.FILM_ID, fg.GENRE_ID, g.GENRE_NAME " +
+        String sqlGenre = "select fg.FILM_ID, g.GENRE_ID, g.GENRE_NAME " +
                 "from FILMS_GENRES as fg join GENRES as g on fg.GENRE_ID = g.GENRE_ID " +
                 "where fg.FILM_ID = ?";
 
@@ -99,10 +94,9 @@ public class FilmDbStorage implements FilmStorage {
             Film film = new Film(filmRow.getLong("FILM_ID"),
                     filmRow.getString("FILM_NAME"),
                     filmRow.getString("DESCRIPTION"),
-                    Objects.requireNonNull(filmRow.getDate("RELEASE_DATE")).toLocalDate(),
+                    filmRow.getDate("RELEASE_DATE").toLocalDate(),
                     filmRow.getInt("DURATION"),
-                    filmRow.getInt("RATE"),
-                    new Mpa(filmRow.getInt("RATING_MPA"), filmRow.getString("DESCRIPTION")),
+                    new Mpa(filmRow.getLong("RATING_MPA"), filmRow.getString("DESCRIPTION")),
                     genreMap.getOrDefault(filmId, new HashSet<>())
             );
             log.info("Найден фильм: {} {}", film.getId(), film.getName());
@@ -116,43 +110,38 @@ public class FilmDbStorage implements FilmStorage {
 
     // создание фильма
     @Override
-    public Film createFilm(Film film) {
-        String sqlFilm = "insert into FILMS(FILM_ID, FILM_NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATING_MPA, RATE) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public Optional<Film> createFilm(Film film) {
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("FILMS")
+                .usingGeneratedKeyColumns("FILM_ID");
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sqlFilm, new String[]{"FILM_ID"});
-            stmt.setString(1, film.getName());
-            stmt.setString(2, film.getDescription());
-            final LocalDate releaseDate = film.getReleaseDate();
-            if (releaseDate == null) {
-                stmt.setNull(3, Types.DATE);
-            } else {
-                stmt.setDate(3, Date.valueOf(releaseDate));
-            }
-            stmt.setInt(4, film.getDuration());
-            stmt.setInt(5, film.getMpa().getRatingMpaId());
-            stmt.setInt(6, film.getRate());
-            return stmt;
-        }, keyHolder);
-        film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+        Long filmId = simpleJdbcInsert.executeAndReturnKey(toMapFilm(film)).longValue();
 
         // теперь надо добавить инфо о жанре в таблицу FILMS_GENRES
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 jdbcTemplate.update("INSERT INTO FILMS_GENRES (FILM_ID, GENRE_ID) " + // или MERGE
-                        "values (?,?)", film.getId(), genre.getGenreId());
+                        "values (?,?)", filmId, genre.getGenreId());
             }
         }
 
         log.debug("Добавлен фильм {}", film);
-        return film;
+        return getFilmByID(filmId);
+    }
+
+    private Map<String, Object> toMapFilm(Film film) {
+        Map<String, Object> values = new HashMap<>();
+        values.put("FILM_NAME", film.getName());
+        values.put("DESCRIPTION", film.getDescription());
+        values.put("RELEASE_DATE", film.getReleaseDate());
+        values.put("DURATION", film.getDuration());
+        values.put("RATING_MPA", film.getMpa().getRatingMpaId());
+        return values;
     }
 
     // обновление данных о фильме
     @Override
-    public Film updateFilm(Film film) {
+    public Optional<Film> updateFilm(Film film) {
         String sqlFilm = "update FILMS set " +
                 "FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE =?, DURATION = ?, RATING_MPA = ?, RATE = ?" +
                 "WHERE FILM_ID = ?";
@@ -163,7 +152,6 @@ public class FilmDbStorage implements FilmStorage {
                 film.getReleaseDate(),
                 film.getDuration(),
                 film.getMpa().getRatingMpaId(),
-                film.getRate(),
                 film.getId());
 
         // надо обновить инфо о жанрах фильма, но сначала удалить все жанры по этому фильму
@@ -176,7 +164,7 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         log.debug("Обновлен фильм {}", film);
-        return film;
+        return getFilmByID(film.getId());
     }
 
     // пользователь ставит лайк фильму
@@ -218,7 +206,7 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getPopularFilms(Integer count) {
         String sqlFilm = "select f.FILM_ID, f.FILM_NAME, f.DESCRIPTION, f.RELEASE_DATE, " +
                 "f.DURATION, f.RATE, f.RATING_MPA, mpa.DESCRIPTION " +
-                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA " +
+                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA_ID " +
                 "ORDER BY f.RATE DESC " +
                 "LIMIT ?";
 

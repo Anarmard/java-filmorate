@@ -6,7 +6,7 @@ VALUES (1, 'Комедия'),
     (5, 'Документальный'),
     (6, 'Боевик');
 
-MERGE INTO RATING_MPA (RATING_MPA, DESCRIPTION)
+MERGE INTO RATING_MPA (RATING_MPA_ID, DESCRIPTION)
 VALUES (1, 'G'),
            (2, 'PG'),
            (3, 'PG-13'),

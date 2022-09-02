@@ -29,12 +29,12 @@ public class FilmService {
     }
 
     // добавление фильма
-    public Film createFilm(Film film) {
+    public Optional<Film> createFilm(Film film) {
         return filmStorage.createFilm(film);
     }
 
     // обновление данных о фильме
-    public Film updateFilm(Film film) {
+    public Optional<Film> updateFilm(Film film) {
         return filmStorage.updateFilm(film);
     }
 

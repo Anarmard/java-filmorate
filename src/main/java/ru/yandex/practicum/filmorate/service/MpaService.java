@@ -23,7 +23,7 @@ public class MpaService {
     }
 
     // получение жанра по ID
-    public Optional<Mpa> getMpaByID(int id) {
+    public Optional<Mpa> getMpaByID(Long id) {
         return mpaStorage.getMpaByID(id);
     }
 

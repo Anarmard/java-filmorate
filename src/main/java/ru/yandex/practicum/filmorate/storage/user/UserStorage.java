@@ -5,7 +5,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface UserStorage {
     // будут определены методы добавления, удаления и модификации объектов
@@ -14,7 +13,7 @@ public interface UserStorage {
 
     Optional<User> getUserByID(Long userId);
 
-    User createUser(User user);
+    Optional<User> createUser(User user);
 
     Optional<User> updateUser(User user);
 

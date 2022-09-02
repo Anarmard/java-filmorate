@@ -10,5 +10,5 @@ public interface MpaStorage {
 
     Collection<Mpa> findAllMpas();
 
-    Optional<Mpa> getMpaByID(int id);
+    Optional<Mpa> getMpaByID(Long id);
 }

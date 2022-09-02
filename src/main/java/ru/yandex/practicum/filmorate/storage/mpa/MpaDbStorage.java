@@ -22,7 +22,7 @@ public class MpaDbStorage implements MpaStorage {
 
     private Mpa makeMpa(ResultSet rs) throws SQLException {
         // используем конструктор, методы ResultSet и готовое значение mpa
-        int id = rs.getInt("RATING_MPA");
+        Long id = rs.getLong("RATING_MPA");
         String description = rs.getString("DESCRIPTION");
         return new Mpa(id, description);
     }
@@ -37,14 +37,14 @@ public class MpaDbStorage implements MpaStorage {
 
     // получение пользователя по ID
     @Override
-    public Optional<Mpa> getMpaByID(int id) {
+    public Optional<Mpa> getMpaByID(Long id) {
         // выполняем запрос к базе данных
-        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select * from RATING_MPA where RATING_MPA = ?", id);
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select * from RATING_MPA where RATING_MPA_ID = ?", id);
 
         // обрабатываем результат выполнения запроса
         if(mpaRows.next()) {
             Mpa mpa = new Mpa(
-                    mpaRows.getInt("RATING_MPA"),
+                    mpaRows.getLong("RATING_MPA_ID"),
                     mpaRows.getString("DESCRIPTION"));
             log.info("Найден рейтинг: {} {}", mpa.getRatingMpaId(), mpa.getDescription());
             return Optional.of(mpa);

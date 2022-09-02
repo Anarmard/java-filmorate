@@ -17,10 +17,10 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FilmControllerTest {
-    static FilmController filmController = new FilmController(new FilmService(null));
+    static FilmController filmController = new FilmController(new FilmService(null), new UserService(null));
 
     Film film = new Film(1L,"Green", "description1",
-            LocalDate.of(2005, 8,1), 120, 7, new Mpa(1, "G"), null);
+            LocalDate.of(2005, 8,1), 120, new Mpa(1L, "G"), null);
 
     @BeforeEach
     void filmCreate() {

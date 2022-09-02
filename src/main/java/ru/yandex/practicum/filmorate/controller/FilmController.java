@@ -2,9 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,10 +19,12 @@ import static ru.yandex.practicum.filmorate.Constants.FIRST_RELEASE_DATE;
 @RequestMapping("/films")
 public class FilmController {
     private final FilmService filmService;
+    private final UserService userService;
 
     @Autowired
-    public FilmController(FilmService filmService) {
+    public FilmController(FilmService filmService, UserService userService) {
         this.filmService = filmService;
+        this.userService = userService;
     }
 
     @GetMapping // получение списка всех фильмов
@@ -32,28 +37,37 @@ public class FilmController {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
+        checkFilmId(id);
         return filmService.getFilmByID(id);
     }
 
     @PostMapping // добавление фильма
-    public Film createFilm(@RequestBody Film film) {
+    public Optional<Film> createFilm(@RequestBody Film film) {
         validateFilm(film); // проверяем параметры фильма
         return filmService.createFilm(film);
     }
 
     @PutMapping // обновление данных о фильме
-    public Film updateFilm(@RequestBody Film film) {
+    public Optional<Film> updateFilm(@RequestBody Film film) {
         validateFilm(film); // проверяем параметры фильма
+        Optional<Film> filmResponse = filmService.updateFilm(film);
+        if (filmResponse.isEmpty()) {
+            throw new NotFoundException("Указан неверный ID фильма");
+        }
         return filmService.updateFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}") // пользователь ставит лайк фильму
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        checkFilmId(id);
+        checkUserId(userId);
         filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}") // пользователь удаляет лайк
     public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+        checkFilmId(id);
+        checkUserId(userId);
         filmService.deleteLike(id, userId);
     }
 
@@ -78,4 +92,19 @@ public class FilmController {
             throw new ValidationException("Продолжительность фильма не положительная");
         }
     }
+
+    public void checkFilmId(Long filmId) {
+        Optional<Film> filmResponse = filmService.getFilmByID(filmId);
+        if (filmResponse.isEmpty()) {
+            throw new NotFoundException("Film with id=" + filmId + " not found");
+        }
+    }
+
+    public void checkUserId(Long userId) {
+        Optional<User> userResponse = userService.getUserByID(userId);
+        if (userResponse.isEmpty()) {
+            throw new NotFoundException("User with id=" + userId + " not found");
+        }
+    }
+
 }

@@ -2,17 +2,14 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -57,7 +54,7 @@ public class UserDbStorage implements UserStorage {
                     userRows.getString("USER_NAME"),
                     userRows.getString("LOGIN"),
                     userRows.getString("EMAIL"),
-                    Objects.requireNonNull(userRows.getDate("BIRTHDAY")).toLocalDate());
+                    userRows.getDate("BIRTHDAY").toLocalDate());
             log.info("Найден пользователь: {} {}", user.getId(), user.getName());
             return Optional.of(user);
         } else {
@@ -69,41 +66,37 @@ public class UserDbStorage implements UserStorage {
     // создание пользователя
     // если не работает, то попробовать второй вариант (сложный) из статьи
     @Override
-    public User createUser(User user) {
-        String sqlQuery = "insert into USERS(USER_ID, USER_NAME, LOGIN, EMAIL, BIRTHDAY) VALUES (?, ?, ?, ?, ?)";
+    public Optional<User> createUser(User user) {
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("USERS")
+                .usingGeneratedKeyColumns("USER_ID");
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"USER_ID"});
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getLogin());
-            stmt.setString(3, user.getEmail());
-            final LocalDate birthday = user.getBirthday();
-            if (birthday == null) {
-                stmt.setNull(4, Types.DATE);
-            } else {
-                stmt.setDate(4, Date.valueOf(birthday));
-            }
-            return stmt;
-        }, keyHolder);
-        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         log.debug("Добавлен пользователь {}", user);
-        return user;
+        return getUserByID(simpleJdbcInsert.executeAndReturnKey(toMapUser(user)).longValue());
+    }
+
+    private Map<String, Object> toMapUser(User user) {
+        Map<String, Object> values = new HashMap<>();
+        values.put("USER_NAME", user.getName());
+        values.put("LOGIN", user.getLogin());
+        values.put("EMAIL", user.getEmail());
+        values.put("BIRTHDAY", user.getBirthday());
+        return values;
     }
 
     // обновление данных о пользователе
     @Override
     public Optional<User> updateUser(User user) {
         String sqlQuery = "update USERS set " +
-                "USER_NAME = ?, LOGIN = ?, EMAIL =? , BIRTHDAY = ? " +
+                "EMAIL = ? , LOGIN = ?, USER_NAME = ?, BIRTHDAY = ? " +
                 "where USER_ID = ?";
 
         jdbcTemplate.update(sqlQuery,
-                user.getId(),
-                user.getName(),
-                user.getLogin(),
                 user.getEmail(),
-                user.getBirthday());
+                user.getLogin(),
+                user.getName(),
+                user.getBirthday(),
+                user.getId());
 
         log.debug("Обновлены данные пользователя {}", user);
         return getUserByID(user.getId());
@@ -112,6 +105,13 @@ public class UserDbStorage implements UserStorage {
     // добавление в друзья
     @Override
     public void addFriend(Long userId, Long friendId) {
+        // для прохождения теста, надо проверить есть ли уже такой друг в списке друзей у user
+        String sqlExistingCheck = "select USER_ID from FRIENDLISTS where (USER_ID = ?) and (FRIEND_ID = ?)";
+
+        if (jdbcTemplate.queryForRowSet(sqlExistingCheck, userId, friendId).next()) {
+            throw new ValidationException("Друг с таким id уже есть в списке друзей пользователя.");
+        }
+
         String sqlQuery = "insert into FRIENDLISTS(USER_ID, FRIEND_ID) VALUES (?, ?)";
         jdbcTemplate.update(sqlQuery, userId, friendId);
     }
@@ -119,8 +119,15 @@ public class UserDbStorage implements UserStorage {
     // удаление из друзей
     @Override
     public boolean deleteFriend(Long userId, Long friendId) {
+        String sqlExistingCheck = "select USER_ID from FRIENDLISTS where (USER_ID = ?) and (FRIEND_ID = ?)";
+
+        if (!jdbcTemplate.queryForRowSet(sqlExistingCheck, userId, friendId).next()) {
+            throw new ValidationException("Друга с таким id нет в списке друзей пользователя.");
+        }
+
         String sqlQuery = "delete from FRIENDLISTS where (USER_ID = ?) and (FRIEND_ID = ?)";
-        return jdbcTemplate.update(sqlQuery, userId, friendId) > 0;
+        jdbcTemplate.update(sqlQuery, userId, friendId);
+        return true;
     }
 
     // возвращаем список пользователей, являющихся его друзьями

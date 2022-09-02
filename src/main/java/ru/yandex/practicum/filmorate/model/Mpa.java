@@ -5,9 +5,10 @@ import lombok.*;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @ToString
-@EqualsAndHashCode(of = "ratingMpaId")
+//@EqualsAndHashCode(of = "ratingMpaId")
 public class Mpa {
-    private int ratingMpaId;
+    private Long ratingMpaId;
     private String description;
 }
