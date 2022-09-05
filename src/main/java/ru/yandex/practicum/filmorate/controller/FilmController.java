@@ -10,7 +10,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.Constants.FIRST_RELEASE_DATE;
 
@@ -69,7 +68,7 @@ public class FilmController {
     @GetMapping("/popular") // возвращает список из первых count фильмов по количеству лайков
     // Если значение параметра count не задано, верните первые 10.
     public List<Film> getPopularFilms(
-            @RequestParam(defaultValue = "10", required = false) Integer count) {
+            @RequestParam(defaultValue = "10", required = false) int count) {
         return filmService.getPopularFilms(count);
     }
 

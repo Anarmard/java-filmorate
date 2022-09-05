@@ -2,12 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/genres")
@@ -25,10 +25,10 @@ public class GenreController {
     }
 
     @GetMapping("/{id}") // получение жанра по ID
-    public Optional<Genre> getGenreByID(@PathVariable Long id) {
+    public Genre getGenreByID(@PathVariable Long id) {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
-        return genreService.getGenreByID(id);
+        return genreService.getGenreByID(id).orElseThrow(() -> new NotFoundException("Genre with id=" + id + " not found"));
     }
 }

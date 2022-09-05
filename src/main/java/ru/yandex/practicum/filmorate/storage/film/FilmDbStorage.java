@@ -32,8 +32,8 @@ public class FilmDbStorage implements FilmStorage {
         LocalDate releaseDate = rs.getDate("RELEASE_DATE").toLocalDate();
         int duration = rs.getInt("DURATION");
         int rate = rs.getInt("RATE");
-        Mpa mpa = new Mpa(rs.getLong("RATING_MPA"), rs.getString("DESCRIPTION"));
-        Set<Genre> genres = genreMap.getOrDefault(id, new HashSet<>()); // проверить можно ли так записать в Set!!!
+        Mpa mpa = new Mpa(rs.getLong("RATING_MPA_ID"), rs.getString("RATING_MPA_NAME"));
+        Set<Genre> genres = genreMap.getOrDefault(id, new HashSet<>());
 
         return new Film(id, name, description, releaseDate, duration, rate, mpa, genres);
     }
@@ -60,8 +60,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findAllFilms() {
         String sqlFilm = "select f.FILM_ID, f.FILM_NAME, f.DESCRIPTION, f.RELEASE_DATE, " +
-                "f.DURATION, f.RATE, f.RATING_MPA, mpa.DESCRIPTION " +
-                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA_ID";
+                "f.DURATION, f.RATE, f.RATING_MPA_ID, mpa.RATING_MPA_NAME " +
+                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA_ID = mpa.RATING_MPA_ID";
 
         String sqlGenre = "select fg.FILM_ID, fg.GENRE_ID, g.GENRE_NAME " +
                 "from FILMS_GENRES as fg join GENRES as g on fg.GENRE_ID = g.GENRE_ID";
@@ -78,8 +78,8 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> getFilmByID(Long filmId) {
         // выполняем запрос к базе данных
         String sqlFilm = "select f.FILM_ID, f.FILM_NAME, f.DESCRIPTION, f.RELEASE_DATE, " +
-                "f.DURATION, f.RATE, f.RATING_MPA, mpa.DESCRIPTION " +
-                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA_ID " +
+                "f.DURATION, f.RATE, f.RATING_MPA_ID, mpa.RATING_MPA_NAME " +
+                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA_ID = mpa.RATING_MPA_ID " +
                 "where f.FILM_ID = ?";
 
         String sqlGenre = "select fg.FILM_ID, fg.GENRE_ID, g.GENRE_NAME " +
@@ -99,7 +99,7 @@ public class FilmDbStorage implements FilmStorage {
                     filmRow.getDate("RELEASE_DATE").toLocalDate(),
                     filmRow.getInt("DURATION"),
                     filmRow.getInt("RATE"),
-                    new Mpa(filmRow.getLong("RATING_MPA"), filmRow.getString("DESCRIPTION")),
+                    new Mpa(filmRow.getLong("RATING_MPA_ID"), filmRow.getString("RATING_MPA_NAME")),
                     genreMap.getOrDefault(filmId, new HashSet<>())
             );
             log.info("Найден фильм: {} {}", film.getId(), film.getName());
@@ -109,7 +109,6 @@ public class FilmDbStorage implements FilmStorage {
             return Optional.empty();
         }
     }
-
 
     // создание фильма
     @Override
@@ -140,7 +139,7 @@ public class FilmDbStorage implements FilmStorage {
         values.put("RELEASE_DATE", film.getReleaseDate());
         values.put("DURATION", film.getDuration());
         values.put("RATE", film.getRate());
-        values.put("RATING_MPA", film.getMpa().getId());
+        values.put("RATING_MPA_ID", film.getMpa().getId());
         return values;
     }
 
@@ -148,7 +147,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film updateFilm(Film film) {
         String sqlFilm = "update FILMS set " +
-                "FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE =?, DURATION = ?, RATE = ?, RATING_MPA = ? " +
+                "FILM_NAME = ?, DESCRIPTION = ?, RELEASE_DATE =?, DURATION = ?, RATE = ?, RATING_MPA_ID = ? " +
                 "WHERE FILM_ID = ?";
 
         jdbcTemplate.update(sqlFilm,
@@ -180,12 +179,18 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlAddLike, filmId, userId);
 
         // надо RATE в таблице FILMS обновить
-        String sqlIncreaseRate = "UPDATE FILMS as f SET f.RATE = (" +
+        String sqlIncreaseRate = "UPDATE FILMS as f SET f.RATE = f.RATE + 1 WHERE f.FILM_ID = ? ";
+
+        // ниже код, если считаем RATE по таблице LIKES каждый раз после добавления/удаления лайка
+        // в тестах подразумевается, что добавил лайк +1 к RATE, удалил лайк -1 от RATE
+        // что оптимальнее и правильнее наверное
+        /* "(" +
                 "SELECT COUNT(l.USER_ID) " +
                 "FROM LIKES as l " +
                 "WHERE l.FILM_ID = ?)" +
                 "WHERE f.FILM_ID = ?";
-        jdbcTemplate.update(sqlIncreaseRate, filmId, filmId);
+         */
+        jdbcTemplate.update(sqlIncreaseRate, filmId);
         log.debug("Пользователь {} поставил лайк фильму {}", userId, filmId);
     }
 
@@ -197,12 +202,16 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlRemoveLike, filmId, userId);
 
         // надо RATE в таблице FILMS обновить
-        String sqlDecreaseRate = "UPDATE FILMS as f SET f.RATE = (" +
+        String sqlDecreaseRate = "UPDATE FILMS as f SET f.RATE = f.RATE - 1 WHERE f.FILM_ID = ? ";
+        /*
+                "(" +
                 "SELECT COUNT(l.USER_ID) " +
                 "FROM LIKES as l " +
                 "WHERE l.FILM_ID = ?)" +
                 "WHERE f.FILM_ID = ?";
-        jdbcTemplate.update(sqlDecreaseRate, filmId, filmId);
+
+         */
+        jdbcTemplate.update(sqlDecreaseRate, filmId);
         log.debug("Пользователь {} удалил лайк фильму {}", userId, filmId);
     }
 
@@ -210,8 +219,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getPopularFilms(Integer count) {
         String sqlFilm = "select f.FILM_ID, f.FILM_NAME, f.DESCRIPTION, f.RELEASE_DATE, " +
-                "f.DURATION, f.RATE, f.RATING_MPA, mpa.DESCRIPTION " +
-                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA = mpa.RATING_MPA_ID " +
+                "f.DURATION, f.RATE, f.RATING_MPA_ID, mpa.RATING_MPA_NAME " +
+                "from FILMS as f join RATING_MPA as mpa on f.RATING_MPA_ID = mpa.RATING_MPA_ID " +
                 "ORDER BY f.RATE DESC " +
                 "LIMIT ?";
 

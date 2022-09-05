@@ -22,8 +22,8 @@ public class MpaDbStorage implements MpaStorage {
 
     private Mpa makeMpa(ResultSet rs) throws SQLException {
         // используем конструктор, методы ResultSet и готовое значение mpa
-        Long id = rs.getLong("RATING_MPA");
-        String description = rs.getString("DESCRIPTION");
+        Long id = rs.getLong("RATING_MPA_ID");
+        String description = rs.getString("RATING_MPA_NAME");
         return new Mpa(id, description);
     }
 
@@ -45,7 +45,7 @@ public class MpaDbStorage implements MpaStorage {
         if(mpaRows.next()) {
             Mpa mpa = new Mpa(
                     mpaRows.getLong("RATING_MPA_ID"),
-                    mpaRows.getString("DESCRIPTION"));
+                    mpaRows.getString("RATING_MPA_NAME"));
             log.info("Найден рейтинг: {} {}", mpa.getId(), mpa.getName());
             return Optional.of(mpa);
         } else {

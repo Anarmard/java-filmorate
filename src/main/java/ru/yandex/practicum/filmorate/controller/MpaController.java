@@ -5,12 +5,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/mpa")
@@ -28,10 +28,10 @@ public class MpaController {
     }
 
     @GetMapping("/{id}") // получение рейтинга по ID
-    public Optional<Mpa> getGenreByID(@PathVariable Long id) {
+    public Mpa getGenreByID(@PathVariable Long id) {
         if (id == 0) {
             throw new ValidationException("Передан пустой ID");
         }
-        return mpaService.getMpaByID(id);
+        return mpaService.getMpaByID(id).orElseThrow(() -> new NotFoundException("MPA with id=" + id + " not found"));
     }
 }

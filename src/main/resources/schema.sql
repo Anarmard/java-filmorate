@@ -1,7 +1,7 @@
 create table if not exists RATING_MPA
 (
     RATING_MPA_ID  INTEGER PRIMARY KEY,
-    DESCRIPTION CHARACTER VARYING(10) not null
+    RATING_MPA_NAME CHARACTER VARYING(10) not null
 );
 
 create table if not exists GENRES
@@ -19,7 +19,7 @@ create table if not exists FILMS
     RELEASE_DATE DATE,
     DURATION     INTEGER,
     RATE         INTEGER,
-    RATING_MPA   INTEGER REFERENCES RATING_MPA (RATING_MPA_ID)
+    RATING_MPA_ID   INTEGER REFERENCES RATING_MPA (RATING_MPA_ID)
 );
 
 create table if not exists FILMS_GENRES
