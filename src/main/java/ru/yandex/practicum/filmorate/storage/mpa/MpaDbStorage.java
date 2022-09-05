@@ -46,7 +46,7 @@ public class MpaDbStorage implements MpaStorage {
             Mpa mpa = new Mpa(
                     mpaRows.getLong("RATING_MPA_ID"),
                     mpaRows.getString("DESCRIPTION"));
-            log.info("Найден рейтинг: {} {}", mpa.getRatingMpaId(), mpa.getDescription());
+            log.info("Найден рейтинг: {} {}", mpa.getId(), mpa.getName());
             return Optional.of(mpa);
         } else {
             log.info("Рейтинг с идентификатором {} не найден.", id);

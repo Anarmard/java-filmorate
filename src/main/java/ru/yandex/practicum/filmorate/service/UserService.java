@@ -29,7 +29,7 @@ public class UserService {
     }
 
     // создание пользователя
-    public Optional<User> createUser(User user) {
+    public User createUser(User user) {
         return userStorage.createUser(user);
     }
 

@@ -15,6 +15,7 @@ public class Film {
     private String description; // описание
     private LocalDate releaseDate; // дата релиза
     private int duration; // продолжительность фильма
+    private int rate; // рейтинг
     private Mpa mpa;
     private Set<Genre> genres;
 }

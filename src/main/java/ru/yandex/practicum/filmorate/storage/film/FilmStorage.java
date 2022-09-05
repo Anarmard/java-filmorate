@@ -13,9 +13,9 @@ public interface FilmStorage {
 
     Optional<Film> getFilmByID(Long id);
 
-    Optional<Film> createFilm(Film film);
+    Film createFilm(Film film);
 
-    Optional<Film> updateFilm(Film film);
+    Film updateFilm(Film film);
 
     void addLike(Long filmId, Long userId);
 

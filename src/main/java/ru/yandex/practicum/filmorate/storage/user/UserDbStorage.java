@@ -66,13 +66,14 @@ public class UserDbStorage implements UserStorage {
     // создание пользователя
     // если не работает, то попробовать второй вариант (сложный) из статьи
     @Override
-    public Optional<User> createUser(User user) {
+    public User createUser(User user) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("USERS")
                 .usingGeneratedKeyColumns("USER_ID");
 
         log.debug("Добавлен пользователь {}", user);
-        return getUserByID(simpleJdbcInsert.executeAndReturnKey(toMapUser(user)).longValue());
+        user.setId(simpleJdbcInsert.executeAndReturnKey(toMapUser(user)).longValue());
+        return user;
     }
 
     private Map<String, Object> toMapUser(User user) {

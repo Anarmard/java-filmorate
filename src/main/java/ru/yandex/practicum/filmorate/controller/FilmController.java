@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -33,27 +32,23 @@ public class FilmController {
     }
 
     @GetMapping("/{id}") // получение фильма по ID
-    public Optional<Film> getFilmByID(@PathVariable Long id) {
+    public Film getFilmByID(@PathVariable Long id) {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
-        checkFilmId(id);
-        return filmService.getFilmByID(id);
+        return filmService.getFilmByID(id).orElseThrow(() -> new NotFoundException("Film with id=" + id + " not found"));
     }
 
     @PostMapping // добавление фильма
-    public Optional<Film> createFilm(@RequestBody Film film) {
+    public Film createFilm(@RequestBody Film film) {
         validateFilm(film); // проверяем параметры фильма
         return filmService.createFilm(film);
     }
 
     @PutMapping // обновление данных о фильме
-    public Optional<Film> updateFilm(@RequestBody Film film) {
+    public Film updateFilm(@RequestBody Film film) {
         validateFilm(film); // проверяем параметры фильма
-        Optional<Film> filmResponse = filmService.updateFilm(film);
-        if (filmResponse.isEmpty()) {
-            throw new NotFoundException("Указан неверный ID фильма");
-        }
+        checkFilmId(film.getId());
         return filmService.updateFilm(film);
     }
 
@@ -94,17 +89,11 @@ public class FilmController {
     }
 
     public void checkFilmId(Long filmId) {
-        Optional<Film> filmResponse = filmService.getFilmByID(filmId);
-        if (filmResponse.isEmpty()) {
-            throw new NotFoundException("Film with id=" + filmId + " not found");
-        }
+        filmService.getFilmByID(filmId).orElseThrow(() -> new NotFoundException("Film with id=" + filmId + " not found"));
     }
 
     public void checkUserId(Long userId) {
-        Optional<User> userResponse = userService.getUserByID(userId);
-        if (userResponse.isEmpty()) {
-            throw new NotFoundException("User with id=" + userId + " not found");
-        }
+        userService.getUserByID(userId).orElseThrow(() -> new NotFoundException("User with id=" + userId + " not found"));
     }
 
 }

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.*;
 
 @Getter
@@ -7,8 +8,13 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-//@EqualsAndHashCode(of = "ratingMpaId")
+@EqualsAndHashCode(of = "id")
 public class Mpa {
-    private Long ratingMpaId;
-    private String description;
+    private Long id;
+    private String name;
+
+    @JsonCreator
+    public Mpa(Long id) {
+        this.id = id;
+    }
 }

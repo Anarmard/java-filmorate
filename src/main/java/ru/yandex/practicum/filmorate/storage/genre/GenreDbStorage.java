@@ -45,7 +45,7 @@ public class GenreDbStorage implements GenreStorage {
             Genre genre = new Genre(
                     genresRows.getLong("GENRE_ID"),
                     genresRows.getString("GENRE_NAME"));
-            log.info("Найден жанр: {} {}", genre.getGenreId(), genre.getName());
+            log.info("Найден жанр: {} {}", genre.getId(), genre.getName());
             return Optional.of(genre);
         } else {
             log.info("Жанр с идентификатором {} не найден.", id);

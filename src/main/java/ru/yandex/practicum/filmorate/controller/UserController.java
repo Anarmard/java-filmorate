@@ -26,28 +26,23 @@ public class UserController {
     }
 
     @GetMapping("/{id}") // получение пользователя по ID
-    public Optional<User> getUserByID(@PathVariable Long id) {
+    public User getUserByID(@PathVariable Long id) {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
-        checkUserId(id);
-        return userService.getUserByID(id);
+        return userService.getUserByID(id).orElseThrow(() -> new NotFoundException("User with id=" + id + " not found"));
     }
 
     @PostMapping // создание пользователя
-    public Optional<User> createUser(@RequestBody User user) {
+    public User createUser(@RequestBody User user) {
         validateUser(user); // проверяем данные пользователя
         return userService.createUser(user);
     }
 
     @PutMapping // обновление данных о пользователе
-    public Optional<User> updateUser(@RequestBody User user) {
+    public User updateUser(@RequestBody User user) {
         validateUser(user); // проверяем данные пользователя
-        Optional<User> userResponse = userService.updateUser(user);
-        if (userResponse.isEmpty()) {
-            throw new NotFoundException("Указан неверный ID пользователя");
-        }
-        return userService.updateUser(user);
+        return userService.updateUser(user).orElseThrow(() -> new NotFoundException("Указан неверный ID пользователя"));
     }
 
     @PutMapping("/{userId}/friends/{friendId}") // добавление в друзья
@@ -93,10 +88,7 @@ public class UserController {
     }
 
     public void checkUserId(Long userId) {
-        Optional<User> userResponse = userService.getUserByID(userId);
-        if (userResponse.isEmpty()) {
-            throw new NotFoundException("User with id=" + userId + " not found");
-        }
+        userService.getUserByID(userId).orElseThrow(() -> new NotFoundException("User with id=" + userId + " not found"));
     }
 
 }
