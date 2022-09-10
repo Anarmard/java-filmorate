@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,10 +17,12 @@ import static ru.yandex.practicum.filmorate.Constants.FIRST_RELEASE_DATE;
 @RequestMapping("/films")
 public class FilmController {
     private final FilmService filmService;
+    private final UserService userService;
 
     @Autowired
-    public FilmController(FilmService filmService) {
+    public FilmController(FilmService filmService, UserService userService) {
         this.filmService = filmService;
+        this.userService = userService;
     }
 
     @GetMapping // получение списка всех фильмов
@@ -31,7 +35,7 @@ public class FilmController {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
-        return filmService.getFilmByID(id);
+        return filmService.getFilmByID(id).orElseThrow(() -> new NotFoundException("Film with id=" + id + " not found"));
     }
 
     @PostMapping // добавление фильма
@@ -43,23 +47,28 @@ public class FilmController {
     @PutMapping // обновление данных о фильме
     public Film updateFilm(@RequestBody Film film) {
         validateFilm(film); // проверяем параметры фильма
+        checkFilmId(film.getId());
         return filmService.updateFilm(film);
     }
 
     @PutMapping("/{id}/like/{userId}") // пользователь ставит лайк фильму
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        checkFilmId(id);
+        checkUserId(userId);
         filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}") // пользователь удаляет лайк
     public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+        checkFilmId(id);
+        checkUserId(userId);
         filmService.deleteLike(id, userId);
     }
 
     @GetMapping("/popular") // возвращает список из первых count фильмов по количеству лайков
     // Если значение параметра count не задано, верните первые 10.
     public List<Film> getPopularFilms(
-            @RequestParam(defaultValue = "10", required = false) Integer count) {
+            @RequestParam(defaultValue = "10", required = false) int count) {
         return filmService.getPopularFilms(count);
     }
 
@@ -77,4 +86,13 @@ public class FilmController {
             throw new ValidationException("Продолжительность фильма не положительная");
         }
     }
+
+    public void checkFilmId(Long filmId) {
+        filmService.getFilmByID(filmId).orElseThrow(() -> new NotFoundException("Film with id=" + filmId + " not found"));
+    }
+
+    public void checkUserId(Long userId) {
+        userService.getUserByID(userId).orElseThrow(() -> new NotFoundException("User with id=" + userId + " not found"));
+    }
+
 }

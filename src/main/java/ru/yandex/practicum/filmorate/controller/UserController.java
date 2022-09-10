@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -29,7 +30,7 @@ public class UserController {
         if (id == null) {
             throw new ValidationException("Передан пустой ID");
         }
-        return userService.getUserByID(id);
+        return userService.getUserByID(id).orElseThrow(() -> new NotFoundException("User with id=" + id + " not found"));
     }
 
     @PostMapping // создание пользователя
@@ -41,26 +42,33 @@ public class UserController {
     @PutMapping // обновление данных о пользователе
     public User updateUser(@RequestBody User user) {
         validateUser(user); // проверяем данные пользователя
-        return userService.updateUser(user);
+        return userService.updateUser(user).orElseThrow(() -> new NotFoundException("Указан неверный ID пользователя"));
     }
 
     @PutMapping("/{userId}/friends/{friendId}") // добавление в друзья
     public void addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        checkUserId(userId);
+        checkUserId(friendId);
         userService.addFriend(userId, friendId);
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}") // удаление из друзей
-    public void deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-        userService.deleteFriend(userId, friendId);
+    public boolean deleteFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        checkUserId(userId);
+        checkUserId(friendId);
+        return userService.deleteFriend(userId, friendId);
     }
 
     @GetMapping("/{userId}/friends") // возвращаем список пользователей, являющихся его друзьями
     public List<User> getListOfFriends (@PathVariable Long userId) {
+        checkUserId(userId);
         return userService.getListOfFriends(userId);
     }
 
     @GetMapping("/{userId}/friends/common/{otherId}") // список друзей, общих с другим пользователем
-    public Set<User> getListOfCommonFriends (@PathVariable Long userId, @PathVariable Long otherId) {
+    public List<User> getListOfCommonFriends (@PathVariable Long userId, @PathVariable Long otherId) {
+        checkUserId(userId);
+        checkUserId(otherId);
         return userService.getListOfCommonFriends(userId, otherId);
     }
 
@@ -78,4 +86,9 @@ public class UserController {
             user.setName(user.getLogin());
         }
     }
+
+    public void checkUserId(Long userId) {
+        userService.getUserByID(userId).orElseThrow(() -> new NotFoundException("User with id=" + userId + " not found"));
+    }
+
 }
