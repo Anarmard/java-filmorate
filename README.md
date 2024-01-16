@@ -18,7 +18,7 @@
 - Хранилища (FilmStorage / UserStorage / GenreStorage / MpaStorage)
 
 Приложение позволяет:
-- Сохранять, находить, редактировать и удалять (CRUD операции) фильмы или пользователей
+- Сохранять, находить и редактировать фильмы или пользователей
 - Добавлять в друзья (или удалять из друзей) других пользователей, получать список друзей пользователя
 - Ставить (или удалять) лайк фильму, находить ТОП фильмов с самым большим количеством лайков
 
@@ -33,7 +33,41 @@
 ![Scheme of Filmorate database](/FILMORATE_diagram.png)
 
 ## Описание API
+<details>
+  <summary><h3>Фильм</h3></summary>
+  
+- **GET** /films - получение списка всех фильмов
+- **GET** /films/{filmId} - получение фильма по ID
+- **POST** /films - добавление фильма
+- **PUT** /films - обновление данных о фильме
+- **PUT** /films/{id}/like/{userId} - пользователь ставит лайк фильму
+- **DELETE** /films/{id}/like/{userId} - пользователь удаляет лайк
+- **GET** /films/popular?count={count} - возвращает список из первых N фильмов по количеству лайков
+</details>
+<details> 
+ <summary><h3>Пользователь</h3></summary>
+  
+- **GET** /users - получение списка всех пользователей
+- **GET** /users/{userId} - получение пользователя по ID
+- **POST** /users - создание пользователя
+- **PUT** /users - обновление данных о пользователе
+- **PUT** /users/{userId}/friends/{friendId} - добавление в друзья
+- **DELETE** /users/{userId}/friends/{friendId} - удаление из друзей
+- **GET** /users/{userId}/friends - получение списка пользователей, являющихся его друзьями
+- **GET** /users/{userId}/friends/common/{otherId} - получение списка друзей, общих с другим пользователем
+</details>
+<details> 
+  <summary><h3>Рейтинг</h3></summary>
 
+- **GET** /mpa - получение списка всех рейтингов
+- **GET** /mpa/{id} - получение рейтинга по ID
+</details>
+<details>
+  <summary><h3>Жанр</h3></summary>
+
+- **GET** /genres - получение списка всех жанров
+- **GET** /genres/{id} - получение жанра по ID
+</details>
 
 ## Сборка и установка
 Требования:
@@ -56,7 +90,7 @@ mvn clean install
 ```
 4. Запустите приложение:
 ```bash
-mvn exec:java -Dexec.mainClass=”FilmorateApplication”
+mvn spring-boot:run
 ```
 
 ## Стек технологий
